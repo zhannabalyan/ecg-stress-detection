@@ -1,0 +1,118 @@
+# Interpretable Stress Detection from ECG Signals Using Motif Based Anomaly Analysis
+
+## Project Objective
+This project implements an unsupervised, personalized stress detection framework using the Matrix Profile algorithm applied to ECG signals from the Wearable Stress and Affect Detection (WESAD) dataset. The pipeline learns the normal cardiac morphology of a subject from a resting baseline, then flags deviations during stress as anomalies without requiring labeled training examples.
+
+A supplementary pipeline investigates whether adding Heart Rate Variability (HRV) features alongside motif distance improves detection performance.
+
+An interactive Streamlit dashboard (`streamlit_app.py`) allows visual exploration of the complete pipeline for every subject.
+
+---
+
+##  Critical Action Required: Dataset Setup
+To comply with Moodle's strict **100 MB** submission file size limit, the heavy raw dataset files are hosted securely on Google Drive. 
+
+ **CRITICAL WARNING:** You **must** download and place these files into the project structure before trying to run the code. If you do not place the `.pkl` files inside the `Capstone_Project/data/` directory, the full execution script and the interactive dashboard will not be able to read the data and will instantly crash with a `FileNotFoundError`.
+
+### Step-by-Step Data Setup:
+1. **Download the Data:** Click the following link to download the compressed data archive:
+    [Download capstone_data.zip from Google Drive](https://drive.google.com/file/d/1JHKXh_3visoikeJaQ8X5dYJgHvEVM0mb/view?usp=drive_link)
+2. **Unzip the Files:** Extract the contents of `capstone_data.zip`. You will see 15 subject files named `S2.pkl` through `S17.pkl`.
+3. **Place the Files:** Move all 15 `.pkl` files directly into your local `Capstone_Project/data/` directory.
+
+---
+
+## Repository Structure
+
+* `code/`
+  * `scripts/`: Modular pipeline scripts for preprocessing, motif analysis, evaluation, and visualization.
+  * `run_pipeline.py`: Single command execution script for the full reproducibility pipeline.
+  * `stress_detection.ipynb`: Original notebook containing exploratory analysis.
+  * `hrv_experiment.ipynb`: Original supplementary HRV experiment notebook.
+  * `streamlit_app.py`: Interactive dashboard application.
+* `data/`
+  * `metadata/`: Demographic information and questionnaire responses per subject.
+  * `README_data.md`: Detailed data variable and preprocessing documentation.
+  * `S2.pkl` to `S17.pkl`: Raw physiological datasets (Subject 12 is excluded as data was not collected). *[Populated via download link above]*
+* `paper/`
+  * `figures/`: Key figures exported directly for LaTeX paper integration.
+  * `results/`: Contains `motif_results.csv` and `hrv_results.csv` serving as computational proof for the final tables.
+* `visualizations/`: Complete archive containing all diagnostic plots for all 15 subjects.
+* `requirements.txt`: List of required Python packages.
+* `README.md`: Project overview and setup instructions.
+
+---
+
+## Dataset Information
+To ensure immediate reproducibility once the data setup steps are completed, all required configuration and subject metadata remain intact within the `data/` directory. No external user registrations are required to fetch the original data copy.
+
+**Original Source and Citation:**
+Schmidt, P., Reiss, A., Dürichen, R., Marberger, C., & Van Laerhoven, K. (2018). Introducing WESAD, a multimodal dataset for wearable stress and affect detection. ACM ICMI 2018. https://doi.org/10.1145/3242969.3242985
+
+*(Please refer to `data/README_data.md` for specific variable definitions and preprocessing steps).*
+
+---
+
+## Required Software and Setup
+Python 3.8 or higher is required. To install all necessary dependencies, open your terminal in the root `Capstone_Project` folder and execute the following command:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## How to Reproduce Results
+To fulfill strict reproducibility requirements while respecting the evaluator's time, the entire experimental pipeline has been modularized and offers two operational modes. From the root directory, execute one of the following commands:
+
+**Option 1: Quick View (Results-Only Mode)**
+To instantly load the pre-computed metrics and view the final result tables without re-running the heavy Matrix Profile computation, run:
+
+```bash
+python code/scripts/run_pipeline.py --results-only
+```
+
+**Option 2: Full Pipeline Reproduction**
+To run the complete pipeline entirely from scratch, computing all motif distances and thresholds for all 15 subjects, run:
+
+```bash
+python code/scripts/run_pipeline.py
+```
+
+*Expected runtime for Option 2: approximately 115 to 120 minutes depending on hardware, as the Matrix Profile computation is highly intensive per subject.*
+
+**The full pipeline command will automatically perform the following actions:**
+* Process all 15 subjects through both the motif analysis and hybrid HRV pipelines.
+* Generate over 100 high resolution diagnostic plots for every subject, saving them to the `visualizations/` archive.
+* Export the final F1, Accuracy, Precision, and Recall scores to `paper/results/` as `.csv` files to provide raw computational proof for the result tables presented in the final paper.
+
+---
+
+## How to Run the Interactive Dashboard
+To visually explore the data, motifs, and anomaly detection for any specific subject, launch the Streamlit app by executing:
+
+```bash
+streamlit run code/streamlit_app.py
+```
+
+This will open an interactive dashboard in your default web browser where you can:
+* Select any subject from the sidebar to run the pipeline dynamically.
+* View the 5 learned baseline motifs.
+* Inspect the anomaly score timeline and distance distributions.
+* Explore the HRV feature comparison (RMSSD baseline vs. stress).
+
+---
+
+## Key Hyperparameters
+* **Sampling frequency:** 700 Hz (WESAD chest ECG hardware specification)
+* **Window size (m):** 1050 samples or 1.5 seconds (Captures one full PQRST cardiac cycle)
+* **Motif count (K):** 5 (Top recurring baseline patterns)
+* **Training split:** 300 seconds (Used exclusively for motif learning)
+* **Validation split:** 180 seconds (Used for optimal threshold tuning)
+* **HRV window:** 15 seconds with a 5 second step (Standard short term HRV analysis parameters)
+
+---
+
+## Preprocessing Steps Summary
+1. **Bandpass filter:** 0.5 to 45 Hz, 3rd order Butterworth. Removes baseline wander and high frequency noise while preserving QRS morphology.
+2. **Z score normalization:** Eliminates inter subject amplitude differences during algorithm processing so motif distances evaluate pure shape, making anomaly scores statistically comparable across individuals.
