@@ -1,0 +1,5 @@
+GitHub Repository:
+https://github.com/zhannabalyan/ecg-stress-detection
+
+Data Download (Google Drive):
+https://drive.google.com/file/d/1JHKXh_3visoikeJaQ8X5dYJgHvEVM0mb/view?usp=drive_link
